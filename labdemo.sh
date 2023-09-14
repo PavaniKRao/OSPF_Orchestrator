@@ -1,6 +1,10 @@
 #!/bin/bash
 
-git clone --quiet https://github.com/PavaniKRao/OSPF_Orchestrator.git
+if [ ! -d "/users/Pavani/Lab2/OSPF_Orchestrator" ];
+then
+    git clone --quiet https://github.com/PavaniKRao/OSPF_Orchestrator.git
+fi
+
 cd OSPF_Orchestrator
 
 Help()
@@ -41,7 +45,9 @@ DockerBuild()
 
 DockerRun()
 {
-    docker-compose up
+    docker kill $(docker ps -q)
+    docker-compose down
+    docker-compose up -d
 }
 
 DockerCheck()
