@@ -1,0 +1,113 @@
+version: '3'
+networks:
+  net_a1:
+    external: true
+    # ipam:
+    #   driver: bridge
+    #   config:
+    #     - subnet: "10.0.14.0/24"
+  net_12:
+    external: true
+    # ipam:
+    #   driver: bridge
+    #   config:
+    #     - subnet: "10.0.15.0/24"
+  net_23:
+    external: true
+  net_3b:
+    external: true
+  net_14:
+    external: true
+  net_43:
+    external: true
+
+
+
+services:
+  host_a:
+    build:
+      context: ./host_a
+      dockerfile: Dockerfile
+    tty: true
+    networks: 
+      net_a1:
+        ipv4_address: 20.0.1.10
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    
+  router1:
+    build:
+      context: ./router1
+      dockerfile: Dockerfile
+    tty: true
+    networks:
+      net_a1:
+        ipv4_address: 20.0.1.20
+      net_12:
+        ipv4_address: 20.0.2.10
+      net_14:
+        ipv4_address: 20.0.5.10
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+
+  router2:
+    build:
+      context: ./router2
+      dockerfile: Dockerfile
+    tty: true
+    networks:
+      net_12:
+        ipv4_address: 20.0.2.20
+      net_23:
+        ipv4_address: 20.0.3.10
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+
+
+  router3:
+    build:
+      context: ./router3
+      dockerfile: Dockerfile
+    tty: true
+    networks:
+      net_23:
+        ipv4_address: 20.0.3.20
+      net_3b:
+        ipv4_address: 20.0.4.10
+      net_43:
+        ipv4_address: 20.0.6.20
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+
+
+  router4:
+    build:
+      context: ./router4
+      dockerfile: Dockerfile
+    tty: true
+    networks:
+      net_14:
+        ipv4_address: 20.0.5.20
+      net_43:
+        ipv4_address: 20.0.6.10
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+
+
+  host_b:
+    build:
+      context: ./host_b
+      dockerfile: Dockerfile
+    tty: true
+    networks: 
+      net_3b:
+        ipv4_address: 20.0.4.20
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+
