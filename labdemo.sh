@@ -29,6 +29,7 @@ Help()
 
 DockerCreateNetwork()
 {
+    docker kill $(docker ps -q)
     docker network prune -f
     ./create_dockernetworks.sh
 }
