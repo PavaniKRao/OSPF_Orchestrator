@@ -13,7 +13,7 @@ Help()
    echo 
    echo "Usage:      ./labdemo -FLAG"
    echo
-   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|p|a|t]"
+   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|p|a|t|w]"
    echo "----------------------------------------------"
    echo
    echo "flags usage:"
@@ -27,6 +27,7 @@ Help()
    echo "p    Ping from hosta to hostb and check tcpdump on router2. Since you are in the tmux session of router2, please use Ctrl+b and s key to jump between sessions. Check succesful ping messages on session hosta. To exit tmux press Ctrl+b and d."
    echo "a    Add router4 to the existing 2 node and 3 router topology. You can check running containers again using the -c flag."
    echo "t    Check tcpdump on router4. Since you are in the tmux session of router4, please use Ctrl+b and s key to jump between sessions. To exit tmux press Ctrl+b and d."
+   echo "w    Change route from via router2 to via router4."
    echo 
    echo "----------------------------------------------"
 }
@@ -132,7 +133,18 @@ R4tcpdump()
 
 }
 
-while getopts "hnibrcepat" flag; do
+ChangeRoute()
+{
+    tmux send -t router4 "vtysh" ENTER
+    tmux send -t router4 "configure terminal" ENTER
+    tmux send -t router4 "interface eth0" ENTER
+    tmux send -t router4 "ip ospf cost 5" ENTER
+    tmux send -t router4 "exit" ENTER
+    tmux send -t router4 "exit" ENTER
+    tmux attach -t router4
+}
+
+while getopts "hnibrcepatw" flag; do
     case "${flag}" in
         h) 
         Help
@@ -160,6 +172,12 @@ while getopts "hnibrcepat" flag; do
         ;;
         a)
         AddRouter4
+        ;;
+        t)
+        R4tcpdump
+        ;;
+        w)
+        ChangeRoute
         ;;
         *)
         echo
