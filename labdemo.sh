@@ -13,7 +13,7 @@ Help()
    echo 
    echo "Usage:      ./labdemo -FLAG"
    echo
-   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|p|a|t|w]"
+   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|p|a|t|w|d|l]"
    echo "----------------------------------------------"
    echo
    echo "flags usage:"
@@ -23,16 +23,13 @@ Help()
    echo "b    Build Docker Containers for the 2 node and 3 router topology"
    echo "r    Run Docker Containers to build the 2 node and 3 router topology"
    echo "c    Checking running Docker Containers"
-   echo "e    Execute running Docker containers with necessary OSPF configuration. \
-   Each container runs in a separate detached tmux session."
-   echo "p    Ping from hosta to hostb and check tcpdump on router2. \
-   Since you are in the tmux session of router2, please use Ctrl+b and s key to jump between sessions. \
-   Check succesful ping messages on session hosta. To exit tmux press Ctrl+b and d."
-   echo "a    Add router4 to the existing 2 node and 3 router topology. \
-   You can check running containers again using the -c flag."
-   echo "t    Check tcpdump on router4. Since you are in the tmux session of router4, \
-   please use Ctrl+b and s key to jump between sessions. To exit tmux press Ctrl+b and d."
+   echo "e    Execute running Docker containers with necessary OSPF configuration. Each container runs in a separate detached tmux session."
+   echo "p    Ping from hosta to hostb and check tcpdump on router2. Since you are in the tmux session of router2, please use Ctrl+b and s key to jump between sessions. Check succesful ping messages on session hosta. To exit tmux press Ctrl+b and d."
+   echo "a    Add router4 to the existing 2 node and 3 router topology. You can check running containers again using the -c flag."
+   echo "t    Check tcpdump on router4. Since you are in the tmux session of router4, please use Ctrl+b and s key to jump between sessions. To exit tmux press Ctrl+b and d."
    echo "w    Change route from via router2 to via router4."
+   echo "d    Remove router2 from the topology with no packet loss between hosta and hostb."
+   echo "l    To check packet loss between hosta and hostb"
    echo 
    echo "----------------------------------------------"
 }
@@ -140,7 +137,7 @@ ExecuteDockerContainers()
     echo
     tmux ls
     echo
-    echo "To ping check the hosts, use -p flag."
+    echo "To do ping check of the hosts, use -p flag."
     echo
 }
 
@@ -149,8 +146,7 @@ Ping()
     echo
     echo "Please wait while the servers are ready for ping. It might take close to 50s."
     echo
-    echo "Once the servers are ready, you'll be inside router2 tmux session with tcpdump running. \
-    Check the ICMP packets. Use Ctrl+b and s keys to switch to hosta session and see successful pings to hostb."
+    echo "Once the servers are ready, you'll be inside router2 tmux session with tcpdump running. Check the ICMP packets. Use Ctrl+b and s keys to switch to hosta session and see successful pings to hostb."
     echo
     echo "You must exit all tmux sessions to proceed further using Ctrl+b and d keys."
     echo
@@ -189,10 +185,7 @@ AddRouter4()
     # tmux send -t router4 "chmod +x service_r4.sh" ENTER
     # tmux send -t router4 "./service_r4.sh" ENTER
     echo
-    echo "Router4 is created and added to the topology with necessary OSPF configurations. \
-    Check tcpdump on it using -t flag. \
-    You should see NO ICMP packets in there.\
-    Remember: You must exit all tmux sessions to proceed further using Ctrl+b and d keys."
+    echo "Router4 is created and added to the topology with necessary OSPF configurations. Check tcpdump on it using -t flag. You should see NO ICMP packets in there. Remember: You must exit all tmux sessions to proceed further using Ctrl+b and d keys."
     echo
 }
 
@@ -222,8 +215,9 @@ ChangeRoute()
     echo
     echo "Please wait while the OSPF is reconfiguring to change route to via r4. It might take close to 40s."
     echo
-    echo "Once the route has been changed, you'll be taken back to router4 tcpdump session to find ICMP packets. \
-    Use Ctrl+b and s keys to switch to router2 tcpdump session to see NO ICMP packets now."
+    echo "Once the route has been changed, you'll be taken back to router4 tcpdump session to find ICMP packets. Use Ctrl+b and s keys to switch to router2 tcpdump session to see NO ICMP packets now."
+    echo
+    echo "To remove router2 from the topology use -d flag"
     echo
     sleep 20
 
@@ -250,7 +244,30 @@ ChangeRoute()
     
 }
 
-while getopts "hnibrcepatw" flag; do
+DeleteRouter2()
+{
+    echo 
+    echo "Removing Router2 from topology."
+    echo "==============================="
+    echo
+    docker stop router2
+    docker rm router2
+    echo 
+    echo "Here's the updated topology."
+    echo "============================"
+    echo
+    docker ps
+    echo 
+    echo "Confirm no packet loss using -l flag. You'll be taken to hosta ping session. Terminate using Ctrl+c and check packet loss. Exit tmux session using using Ctrl+b and d keys."
+    echo 
+}
+
+NoPacketLoss()
+{
+    tmux a -t hosta
+}
+
+while getopts "hnibrcepatwdl" flag; do
     case "${flag}" in
         h) 
         Help
@@ -284,6 +301,12 @@ while getopts "hnibrcepatw" flag; do
         ;;
         w)
         ChangeRoute
+        ;;
+        d)
+        DeleteRouter2
+        ;;
+        l)
+        NoPacketLoss
         ;;
         *)
         echo
