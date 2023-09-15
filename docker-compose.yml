@@ -25,6 +25,7 @@ networks:
 
 services:
   host_a:
+    container_name: hosta
     build:
       context: ./host_a
       dockerfile: Dockerfile
@@ -37,6 +38,7 @@ services:
       - SYS_ADMIN
     
   router1:
+    container_name: router1
     build:
       context: ./router1
       dockerfile: Dockerfile
@@ -53,6 +55,7 @@ services:
       - SYS_ADMIN
 
   router2:
+    container_name: router2
     build:
       context: ./router2
       dockerfile: Dockerfile
@@ -68,6 +71,7 @@ services:
 
 
   router3:
+    container_name: router3
     build:
       context: ./router3
       dockerfile: Dockerfile
@@ -85,6 +89,7 @@ services:
 
 
   host_b:
+    container_name: hostb
     build:
       context: ./host_b
       dockerfile: Dockerfile
