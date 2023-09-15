@@ -2,7 +2,7 @@
 
 if [ ! -d "/users/Pavani/Lab2/OSPF_Orchestrator" ];
 then
-    git clone --quiet https://github.com/PavaniKRao/OSPF_Orchestrator.git
+    git clone --quiet git@github.com:PavaniKRao/OSPF_Orchestrator.git
 fi
 
 cd OSPF_Orchestrator
