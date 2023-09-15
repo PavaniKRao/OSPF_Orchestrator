@@ -26,6 +26,11 @@ systemctl disable ripngd
 systemctl disable isisd
 
 /bin/cat << EOF > /etc/quagga/ospfd.conf
+! -*- ospf -*-
+!
+! OSPFd sample configuration file
+!
+!
 hostname hostb
 !password zebra
 !enable password please-set-at-here
@@ -36,7 +41,7 @@ router ospf
   redistribute kernel
   redistribute connected
   redistribute static
-  network 20.0.4.0/24 area 2 stub
+  network 20.0.4.0/24 area 2 
 !
 access-list 20 permit 20.0.1.0 0.0.0.255
 access-list 21 permit 20.0.2.0 0.0.0.255
@@ -50,6 +55,12 @@ line vty
 EOF
 
 /bin/cat << EOF > /etc/quagga/zebra.conf
+! -*- zebra -*-
+!
+! zebra sample configuration file
+!
+! $Id: zebra.conf.sample,v 1.1 2002/12/13 20:15:30 paul Exp $
+!
 hostname hostb
 password zebra
 enable password zebra
