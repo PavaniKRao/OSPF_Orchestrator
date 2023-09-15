@@ -84,21 +84,6 @@ services:
       - SYS_ADMIN
 
 
-  router4:
-    build:
-      context: ./router4
-      dockerfile: Dockerfile
-    tty: true
-    networks:
-      net_14:
-        ipv4_address: 20.0.5.20
-      net_43:
-        ipv4_address: 20.0.6.10
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-
-
   host_b:
     build:
       context: ./host_b
