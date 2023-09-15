@@ -13,7 +13,7 @@ Help()
    echo 
    echo "Usage:      ./labdemo -FLAG"
    echo
-   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|p|a]"
+   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|p|a|t]"
    echo "----------------------------------------------"
    echo
    echo "flags usage:"
@@ -24,8 +24,9 @@ Help()
    echo "r    Run Docker Containers to build a 2 node and 3 router topology"
    echo "c    Checking running Docker Containers"
    echo "e    Execute running Docker containers with necessary OSPF configuration. Each container runs in a separate detached tmux session."
-   echo "p    Ping from hosta to hostb and check tcpdump on router4."
+   echo "p    Ping from hosta to hostb and check tcpdump on router2. Since you are in the tmux session of router2, please use Ctrl+b and s key to jump between sessions. Check succesful ping messages on session hosta. To exit tmux press Ctrl+b and d."
    echo "a    Add router4 to the existing 2 node and 3 router topology. You can check running containers again using the -c flag."
+   echo "t    Check tcpdump on router4. Since you are in the tmux session of router4, please use Ctrl+b and s key to jump between sessions. To exit tmux press Ctrl+b and d."
    echo 
    echo "----------------------------------------------"
 }
@@ -97,8 +98,6 @@ ExecuteDockerContainers()
 Ping()
 {
     tmux send -t hosta "ping 20.0.4.20" ENTER
-    # tmux attach -t hosta
-    # tmux attach -t hostb
     tmux send -t router2 "tcpdump -i eth0" ENTER
     tmux attach -t router2
 }
@@ -111,6 +110,7 @@ AddRouter4()
     docker run -itd --cap-add=ALL --network=net_14 --ip 20.0.5.20 --name router4 pavani181/quagga_ubuntu20.04:2.0 sh
     docker network connect --ip 20.0.6.10 net_43 router4
     docker start router4
+    docker cp service_r4.sh $(sudo docker ps -aqf "name=router4"):/
     
     tmux has-session -t router4 2>/dev/null
 
@@ -121,9 +121,18 @@ AddRouter4()
     tmux kill-session -t router4
     tmux new-session -d -s "router4"
     tmux send -t router4 "docker exec -it $(sudo docker ps -aqf "name=router4") /bin/bash" ENTER
+    tmux send -t router4 "chmod +x service_r4.sh" ENTER
+    tmux send -t router4 "./servicer4.sh" ENTER
 }
 
-while getopts "hnibrcepa" flag; do
+R4tcpdump()
+{
+    tmux send -t router4 "tcpdump -i eth0" ENTER
+    tmux attach -t router4
+
+}
+
+while getopts "hnibrcepat" flag; do
     case "${flag}" in
         h) 
         Help
