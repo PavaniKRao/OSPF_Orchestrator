@@ -94,10 +94,19 @@ ExecuteDockerContainers()
         tmux send -t router$j "chmod +x service.sh" ENTER
         tmux send -t router$j "./service.sh" ENTER
     done
+    echo 
+    echo "Below are the tmux sessions for each topology node. Feel free to attach and check."
+    echo "=================================================================================="
+    echo
+    tmux ls
 }
 
 Ping()
 {
+    echo
+    echo "Please wait while the OSPF is configuring. It might take close to 60s."
+    echo
+    sleep 60
     tmux send -t hosta "ping 20.0.4.20" ENTER
     tmux send -t router2 "tcpdump -i eth0" ENTER
     tmux attach -t router2
@@ -128,6 +137,7 @@ AddRouter4()
 
 R4tcpdump()
 {
+    
     tmux send -t router4 "tcpdump -i eth0" ENTER
     tmux attach -t router4
 
@@ -135,13 +145,30 @@ R4tcpdump()
 
 ChangeRoute()
 {
-    tmux send -t router4 "vtysh" ENTER
-    tmux send -t router4 "configure terminal" ENTER
-    tmux send -t router4 "interface eth0" ENTER
-    tmux send -t router4 "ip ospf cost 5" ENTER
-    tmux send -t router4 "exit" ENTER
-    tmux send -t router4 "exit" ENTER
+    tmux has-session -t router4_2 2>/dev/null
+
+    if [ $? != 0 ]; then
+        tmux new-session -d -s "router4_2"
+        tmux send -t router4_2 "docker exec -it $(sudo docker ps -aqf "name=router4") /bin/bash" ENTER
+    fi
+    tmux kill-session -t router4_2
+    tmux new-session -d -s "router4_2"
+    tmux send -t router4_2 "docker exec -it $(sudo docker ps -aqf "name=router4") /bin/bash" ENTER
+    tmux send -t router4_2 "./servicer4.sh" ENTER
+    echo
+    echo "Please wait while the OSPF is reconfiguring. It might take close to 30s."
+    echo
+    sleep 30
+
+    tmux send -t router4_2 "vtysh" ENTER
+    tmux send -t router4_2 "configure terminal" ENTER
+    tmux send -t router4_2 "interface eth0" ENTER
+    tmux send -t router4_2 "ip ospf cost 5" ENTER
+    tmux send -t router4_2 "exit" ENTER
+    tmux send -t router4_2 "exit" ENTER
+    #tmux send -t router4_2 "tcpdump -i eth0" ENTER
     tmux attach -t router4
+    
 }
 
 while getopts "hnibrcepatw" flag; do
