@@ -13,16 +13,17 @@ Help()
    echo 
    echo "Usage:      ./labdemo -FLAG"
    echo
-   echo "Supported flags with this script are: [-h|n|i|b|r|c|a]"
+   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|a]"
    echo "----------------------------------------------"
    echo
    echo "flags usage:"
    echo "h    Print this Help."
    echo "n    Create Docker networks"
-   echo "i    Inspect all docker networks"
+   echo "i    List and Insapect all docker networks"
    echo "b    Build Docker Containers for a 2 node and 3 router topology"
    echo "r    Run Docker Containers to build a 2 node and 3 router topology"
    echo "c    Checking running Docker Containers"
+   echo "e    Execute running Docker containers in detached tmux sessions."
    echo "a    Add router4 to the existing 2 node and 3 router topology. You can check running containers again using the -c flag."
    echo 
    echo "----------------------------------------------"
@@ -37,6 +38,7 @@ DockerCreateNetwork()
 
 DockerInspectNetwork()
 {
+    docker network ls
     ./inspect_dockernetworks.sh
 }
 
@@ -47,7 +49,8 @@ DockerBuild()
 
 DockerRun()
 {
-    docker kill $(docker ps -q)
+    docker stop $(docker ps -q)
+    docker rm $(docker ps -q)
     docker-compose down
     docker-compose up -d
 }
@@ -57,32 +60,56 @@ DockerCheck()
     docker ps
 }
 
-AddRouter4()
-{
-    docker rm $(docker ps -a -q)
-    docker pull pavani181/quagga_ubuntu20.04:1.0
-    docker run -itd --cap-add=ALL --network=net_14 --ip 20.0.5.20 --name router4 pavani181/quagga_ubuntu20.04:2.0 sh
-    docker network connect --ip 20.0.6.10 net_43 router4
-    docker start router4
-    tmux new-session -d -s "router4"
-}
-
-LaunchNodes()
+ExecuteDockerContainers()
 {
     for i in a b
     do 
+        tmux has-session -t host$i 2>/dev/null
+
+        if [ $? != 0 ]; then
+            tmux new-session -d -s "host$i"
+            tmux send -t host$i "docker exec -it $(sudo docker ps -aqf "name=host$i") /bin/bash" ENTER
+        fi
+        tmux kill-session -t host$i
         tmux new-session -d -s "host$i"
         tmux send -t host$i "docker exec -it $(sudo docker ps -aqf "name=host$i") /bin/bash" ENTER
     done
 
     for j in 1 2 3
     do
+        tmux has-session -t router$j 2>/dev/null
+
+        if [ $? != 0 ]; then
+            tmux new-session -d -s "router$j"
+            tmux send -t router$j "docker exec -it $(sudo docker ps -aqf "name=router$j") /bin/bash" ENTER
+        fi
+        tmux kill-session -t router$j
         tmux new-session -d -s "router$j"
         tmux send -t router$j "docker exec -it $(sudo docker ps -aqf "name=router$j") /bin/bash" ENTER
     done
 }
 
-while getopts "hnibrca" flag; do
+AddRouter4()
+{
+    docker stop router4
+    docker rm router4
+    docker pull pavani181/quagga_ubuntu20.04:2.0
+    docker run -itd --cap-add=ALL --network=net_14 --ip 20.0.5.20 --name router4 pavani181/quagga_ubuntu20.04:2.0 sh
+    docker network connect --ip 20.0.6.10 net_43 router4
+    docker start router4
+    
+    tmux has-session -t router4 2>/dev/null
+
+    if [ $? != 0 ]; then
+        tmux new-session -d -s "router4"
+        tmux send -t router4 "docker exec -it $(sudo docker ps -aqf "name=router4") /bin/bash" ENTER
+    fi
+    tmux kill-session -t router4
+    tmux new-session -d -s "router4"
+    tmux send -t router4 "docker exec -it $(sudo docker ps -aqf "name=router4") /bin/bash" ENTER
+}
+
+while getopts "hnibrcea" flag; do
     case "${flag}" in
         h) 
         Help
@@ -101,6 +128,9 @@ while getopts "hnibrca" flag; do
         ;;
         c)
         DockerCheck
+        ;;
+        e)
+        ExecuteDockerContainers
         ;;
         a)
         AddRouter4
