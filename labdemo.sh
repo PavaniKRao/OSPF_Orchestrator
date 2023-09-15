@@ -73,6 +73,8 @@ ExecuteDockerContainers()
         tmux kill-session -t host$i
         tmux new-session -d -s "host$i"
         tmux send -t host$i "docker exec -it $(sudo docker ps -aqf "name=host$i") /bin/bash" ENTER
+        tmux send -t host$i "chmod +x service.sh" ENTER
+        tmux send -t host$i "./service.sh" ENTER
     done
 
     for j in 1 2 3
