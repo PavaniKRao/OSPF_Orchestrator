@@ -296,7 +296,7 @@ done
 if [ $# -eq 0 ];
 then
     echo 
-    echo "Please run with appropriate flag!"
+    echo "Welcome to my OSPF Orchestrator! Please run with appropriate flag. Use ./labdemo.sh -h for more information."
     Help
     exit 0
 fi
