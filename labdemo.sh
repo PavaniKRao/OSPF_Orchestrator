@@ -13,7 +13,7 @@ Help()
    echo 
    echo "Usage:      ./labdemo -FLAG"
    echo
-   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|a]"
+   echo "Supported flags with this script are: [-h|n|i|b|r|c|e|p|a]"
    echo "----------------------------------------------"
    echo
    echo "flags usage:"
@@ -23,7 +23,8 @@ Help()
    echo "b    Build Docker Containers for a 2 node and 3 router topology"
    echo "r    Run Docker Containers to build a 2 node and 3 router topology"
    echo "c    Checking running Docker Containers"
-   echo "e    Execute running Docker containers in detached tmux sessions."
+   echo "e    Execute running Docker containers with necessary OSPF configuration. Each container runs in a detached tmux sessions."
+   echo "p    Ping from hosta to hostb and check tcpdump on router4"
    echo "a    Add router4 to the existing 2 node and 3 router topology. You can check running containers again using the -c flag."
    echo 
    echo "----------------------------------------------"
@@ -88,14 +89,21 @@ ExecuteDockerContainers()
         tmux kill-session -t router$j
         tmux new-session -d -s "router$j"
         tmux send -t router$j "docker exec -it $(sudo docker ps -aqf "name=router$j") /bin/bash" ENTER
+        tmux send -t router$j "chmod +x service.sh" ENTER
+        tmux send -t router$j "./service.sh" ENTER
     done
+}
+
+Ping()
+{
+    
 }
 
 AddRouter4()
 {
     docker stop router4
     docker rm router4
-    docker pull pavani181/quagga_ubuntu20.04:2.0
+    docker pull pavani181/quagga_ubuntu20.04:3.0
     docker run -itd --cap-add=ALL --network=net_14 --ip 20.0.5.20 --name router4 pavani181/quagga_ubuntu20.04:2.0 sh
     docker network connect --ip 20.0.6.10 net_43 router4
     docker start router4
