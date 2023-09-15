@@ -1,4 +1,4 @@
-FROM pavani181/quagga_ubuntu20.04:3.0
+FROM pavani181/quagga_ubuntu20.04:4.0
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 

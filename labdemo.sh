@@ -23,8 +23,8 @@ Help()
    echo "b    Build Docker Containers for a 2 node and 3 router topology"
    echo "r    Run Docker Containers to build a 2 node and 3 router topology"
    echo "c    Checking running Docker Containers"
-   echo "e    Execute running Docker containers with necessary OSPF configuration. Each container runs in a detached tmux sessions."
-   echo "p    Ping from hosta to hostb and check tcpdump on router4"
+   echo "e    Execute running Docker containers with necessary OSPF configuration. Each container runs in a separate detached tmux session."
+   echo "p    Ping from hosta to hostb and check tcpdump on router4."
    echo "a    Add router4 to the existing 2 node and 3 router topology. You can check running containers again using the -c flag."
    echo 
    echo "----------------------------------------------"
@@ -96,14 +96,18 @@ ExecuteDockerContainers()
 
 Ping()
 {
-    
+    tmux send -t hosta "ping 20.0.4.20" ENTER
+    # tmux attach -t hosta
+    # tmux attach -t hostb
+    tmux send -t router2 "tcpdump -i eth0" ENTER
+    tmux attach -t router2
 }
 
 AddRouter4()
 {
     docker stop router4
     docker rm router4
-    docker pull pavani181/quagga_ubuntu20.04:3.0
+    docker pull pavani181/quagga_ubuntu20.04:4.0
     docker run -itd --cap-add=ALL --network=net_14 --ip 20.0.5.20 --name router4 pavani181/quagga_ubuntu20.04:2.0 sh
     docker network connect --ip 20.0.6.10 net_43 router4
     docker start router4
@@ -119,7 +123,7 @@ AddRouter4()
     tmux send -t router4 "docker exec -it $(sudo docker ps -aqf "name=router4") /bin/bash" ENTER
 }
 
-while getopts "hnibrcea" flag; do
+while getopts "hnibrcepa" flag; do
     case "${flag}" in
         h) 
         Help
@@ -141,6 +145,9 @@ while getopts "hnibrcea" flag; do
         ;;
         e)
         ExecuteDockerContainers
+        ;;
+        p)
+        Ping
         ;;
         a)
         AddRouter4
